@@ -84,6 +84,10 @@
                                 <button class="btn btn-danger">Cancel</button>
                             </form>
                         </div>
+
+                        <script>
+                            document.forms['auto_approve'].submit();
+                        </script>
                     </div>
                 </div>
             </div>

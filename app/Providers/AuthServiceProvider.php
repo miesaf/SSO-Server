@@ -34,8 +34,9 @@ class AuthServiceProvider extends ServiceProvider
         Passport::refreshTokensExpireIn(now()->addDays(30));
         Passport::personalAccessTokensExpireIn(now()->addMonths(6));
 
-        Passport::tokensCan([
-            'view-user' => "View user information"
-        ]);
+        // Custom authorization routes
+        \Route::get('oauth/authorize', [
+            'uses' => '\App\Http\Controllers\Passport\AuthorizationController@authorize',
+        ])->middleware(['web', 'auth']);
     }
 }
