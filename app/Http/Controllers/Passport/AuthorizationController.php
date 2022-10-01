@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Passport;
 
 use Illuminate\Http\Request;
+use Illuminate\Support\Str;
 use Laravel\Passport\TokenRepository;
 use Laravel\Passport\ClientRepository;
 use Psr\Http\Message\ServerRequestInterface;
@@ -48,6 +49,7 @@ class AuthorizationController extends OauthAuthorizationController
 
             \Log::info('Oauth Authorize client login ...', $log_info);
 
+            $request->session()->put('authToken', $authToken = Str::random());
             $request->session()->put('authRequest', $authRequest);
 
             return $this->response->view('passport::authorize', [
@@ -55,6 +57,7 @@ class AuthorizationController extends OauthAuthorizationController
                 'user' => $user,
                 'scopes' => $scopes,
                 'request' => $request,
+                'authToken' => $authToken,
             ]);
         });
     }
