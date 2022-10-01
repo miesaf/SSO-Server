@@ -134,4 +134,10 @@
 <h1>Dimensi Kini</h1>
 <h1>Single Sign On (SSO) Server</h1>
 
-<a href="home"> Home </a>
+@auth
+<a href="{{ route('home') }}"><button> Home </button></a>
+@else
+<a href="{{ route('login') }}"><button> Login </button></a>
+<a href="{{ route('register') }}"><button> Register </button></a>
+@endauth
+<a href="http://localhost/SSO-Client-1/public"><button> SSO Client 1 </button></a>
