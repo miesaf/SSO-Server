@@ -130,14 +130,21 @@
         </div>
     </body>
 </html> --}}
+<html>
+<head>
+    <title>{{ config('app.name') }}</title>
+</head>
+<body>
+    <h1>Dimensi Kini</h1>
+    <h1>Single Sign On (SSO) Server</h1>
 
-<h1>Dimensi Kini</h1>
-<h1>Single Sign On (SSO) Server</h1>
-
-@auth
-<a href="{{ route('home') }}"><button> Home </button></a>
-@else
-<a href="{{ route('login') }}"><button> Login </button></a>
-<a href="{{ route('register') }}"><button> Register </button></a>
-@endauth
-<a href="http://localhost/SSO-Client-1/public"><button> SSO Client 1 </button></a>
+    @auth
+    <a href="{{ route('home') }}"><button> Home </button></a>
+    @else
+    <a href="{{ route('login') }}"><button> Login </button></a>
+    <a href="{{ route('register') }}"><button> Register </button></a>
+    @endauth
+    <a href="http://localhost/SSO-Client-1/public"><button> SSO Client 1 </button></a>
+    <a href="http://localhost/SSO-Client-2/public"><button> SSO Client 2 </button></a>
+</body>
+</html>
