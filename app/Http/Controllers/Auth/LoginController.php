@@ -3,13 +3,8 @@
 namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
-use App\Providers\RouteServiceProvider;
-use Illuminate\Http\Request;
-use Illuminate\Http\JsonResponse;
 use Illuminate\Foundation\Auth\AuthenticatesUsers;
-use Laravel\Passport\TokenRepository;
-use Laravel\Passport\RefreshTokenRepository;
-use Laravel\Passport\Bridge\AuthCodeRepository;
+use Illuminate\Http\Request;
 use Laravel\Passport\Passport;
 
 class LoginController extends Controller
@@ -25,14 +20,16 @@ class LoginController extends Controller
     |
     */
 
-    use AuthenticatesUsers;
+    use AuthenticatesUsers {
+        logout as endSession;
+    }
 
     /**
      * Where to redirect users after login.
      *
      * @var string
      */
-    protected $redirectTo = RouteServiceProvider::HOME;
+    protected $redirectTo = '/home';
 
     /**
      * Create a new controller instance.
@@ -42,43 +39,29 @@ class LoginController extends Controller
     public function __construct()
     {
         $this->middleware('guest')->except('logout');
+        $this->middleware('auth')->only('logout');
     }
 
+    /**
+     * Log the user out of the SSO server and revoke everything it issued to them,
+     * so every client app has to send the user through the login page again.
+     *
+     * @param  \Illuminate\Http\Request  $request
+     * @return \Illuminate\Http\RedirectResponse|\Illuminate\Http\JsonResponse
+     */
     public function logout(Request $request)
     {
-        $tokenRepository = app(TokenRepository::class);
-        $refreshTokenRepository = app(RefreshTokenRepository::class);
-        $authCodeRepository = app(AuthCodeRepository::class);
+        $userId = $request->user()->getAuthIdentifier();
 
-        $accessTokens = Passport::token()->where('user_id', auth()->user()->id)->where('revoked', false)->get();
+        $accessTokenIds = Passport::token()->newQuery()
+            ->where('user_id', $userId)
+            ->where('revoked', false)
+            ->pluck('id');
 
-        if($accessTokens->count() > 0) {
-            foreach($accessTokens as $accessToken) {
-                $tokenRepository->revokeAccessToken($accessToken->id);
-                $refreshTokenRepository->revokeRefreshTokensByAccessTokenId($accessToken->id);
-            }
-        }
+        Passport::token()->newQuery()->whereIn('id', $accessTokenIds)->update(['revoked' => true]);
+        Passport::refreshToken()->newQuery()->whereIn('access_token_id', $accessTokenIds)->update(['revoked' => true]);
+        Passport::authCode()->newQuery()->where('user_id', $userId)->where('revoked', false)->update(['revoked' => true]);
 
-        $authCodes = Passport::authCode()->where('user_id', auth()->user()->id)->where('revoked', false)->get();
-
-        if($authCodes->count() > 0) {
-            foreach($authCodes as $authCode) {
-                $authCodeRepository->revokeAuthCode($authCode->id);
-            }
-        }
-
-        $this->guard()->logout();
-
-        $request->session()->invalidate();
-
-        $request->session()->regenerateToken();
-
-        if ($response = $this->loggedOut($request)) {
-            return $response;
-        }
-
-        return $request->wantsJson()
-            ? new JsonResponse([], 204)
-            : redirect('/');
+        return $this->endSession($request);
     }
 }
